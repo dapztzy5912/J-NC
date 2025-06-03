@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediaFire Downloader</title>
+    <style>
+      body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f5f5f5;
+    color: #333;
+}
+h1 {
+    color: #2c6ecb;
+    text-align: center;
+}
+.container {
+    background-color: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+.input-group {
+    margin-bottom: 20px;
+}
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+button {
+    background-color: #2c6ecb;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    width: 100%;
+    transition: background-color 0.3s;
+}
+button:hover {
+    background-color: #1a5bb7;
+}
+button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+#result {
+    margin-top: 20px;
+    padding: 15px;
+    border-radius: 4px;
+    display: none;
+}
+.success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+.loading {
+    text-align: center;
+    margin: 20px 0;
+    display: none;
+}
+.spinner {
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border-left-color: #2c6ecb;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 10px;
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+.file-info {
+    margin-top: 20px;
+}
+.download-btn {
+    display: block;
+    text-align: center;
+    margin-top: 15px;
+    background-color: #28a745;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 4px;
+    text-decoration: none;
+}
+.download-btn:hover {
+    background-color: #218838;
+}
+      </style>
+</head>
+<body>
+    <div class="container">
+        <h1>MediaFire Downloader</h1>
+        <div class="input-group">
+            <label for="mediafire-url">MediaFire Link:</label>
+            <input type="text" id="mediafire-url" placeholder="https://www.mediafire.com/file/xxxxx">
+        </div>
+        <button id="download-btn">Download</button>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Processing your download request...</p>
+        </div>
+        
+        <div id="result"></div>
+        <div class="file-info" id="file-info" style="display: none;">
+            <h3>File Information</h3>
+            <p><strong>File Name:</strong> <span id="file-name"></span></p>
+            <p><strong>File Size:</strong> <span id="file-size"></span></p>
+            <a id="direct-link" href="#" target="_blank" class="download-btn">Download Now</a>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const downloadBtn = document.getElementById('download-btn');
+            const mediafireUrl = document.getElementById('mediafire-url');
+            const loading = document.getElementById('loading');
+            const result = document.getElementById('result');
+            const fileInfo = document.getElementById('file-info');
+            const fileName = document.getElementById('file-name');
+            const fileSize = document.getElementById('file-size');
+            const directLink = document.getElementById('direct-link');
+            
+            downloadBtn.addEventListener('click', async function() {
+                const url = mediafireUrl.value.trim();
+                
+                if (!url) {
+                    showResult('Please enter a MediaFire URL', 'error');
+                    return;
+                }
+                
+                if (!url.includes('mediafire.com')) {
+                    showResult('The URL must be from MediaFire', 'error');
+                    return;
+                }
+                
+                try {
+                    // Show loading
+                    loading.style.display = 'block';
+                    downloadBtn.disabled = true;
+                    result.style.display = 'none';
+                    fileInfo.style.display = 'none';
+                    
+                    // Call our backend API
+                    const response = await fetch(`/api/download?url=${encodeURIComponent(url)}`);
+                    const data = await response.json();
+                    
+                    if (!response.ok) {
+                        throw new Error(data.error || 'Failed to get file information');
+                    }
+                    
+                    // Display file info
+                    fileName.textContent = data.fileName;
+                    fileSize.textContent = data.fileSize;
+                    directLink.href = data.downloadUrl;
+                    
+                    // Hide loading and show results
+                    loading.style.display = 'none';
+                    fileInfo.style.display = 'block';
+                    showResult('File information retrieved successfully!', 'success');
+                    
+                } catch (error) {
+                    console.error(error);
+                    loading.style.display = 'none';
+                    showResult('Error: ' + (error.message || 'Failed to download file'), 'error');
+                } finally {
+                    downloadBtn.disabled = false;
+                }
+            });
+            
+            function showResult(message, type) {
+                result.textContent = message;
+                result.className = type;
+                result.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
