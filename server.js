@@ -9,7 +9,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Telegram Bot Configuration
-const TELEGRAM_BOT_TOKEN = "7917706055:AAFtNr5593oDUEA6v72iNObn6k7wLmfCxwk";
+const TELEGRAM_BOT_TOKEN = "7470753392:AAFbCMZ_52okqXncyfy8eTZ8TsxWJmw19Oc";
 
 // Middleware
 app.use(cors());
